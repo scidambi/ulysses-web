@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Container, Typography, CircularProgress, Box } from '@mui/material';
+import { useState } from "react";
+import { Container, Typography, CircularProgress, Box } from "@mui/material";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -10,11 +10,18 @@ function App() {
         Ulysses Literary Analysis
       </Typography>
       {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress />
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="400px"
+        >
+          <CircularProgress size={60} />
         </Box>
       ) : (
-        <Typography>Analysis will appear here</Typography>
+        <Typography variant="body1">
+          Analysis will appear here
+        </Typography>
       )}
     </Container>
   );
