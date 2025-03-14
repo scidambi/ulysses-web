@@ -201,4 +201,3 @@ function App() {
 
 export default App;
 
-feat: Add literary analysis features with Material-UI and Chart.js
