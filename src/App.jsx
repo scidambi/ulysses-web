@@ -1,30 +1,3 @@
-import { useState } from "react";
-import { Container, Typography, CircularProgress, Box } from "@mui/material";
-
-function App() {
-  const [loading, setLoading] = useState(true);
-
-  return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" component="h1" gutterBottom>
-        Ulysses Literary Analysis
-      </Typography>
-      {loading ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="400px"
-        >
-          <CircularProgress size={60} />
-        </Box>
-      ) : (
-        <Typography variant="body1">
-          Analysis will appear here
-        </Typography>
-      )}
-    </Container>
-  );
-}
-
-export default App;
+import { useState, useEffect } from "react"; import { Container, Typography, CircularProgress, Box } from "@mui/material"; function App() { const [loading, setLoading] = useState(true); const [error, setError] = useState(null); const [debugInfo, setDebugInfo] = useState({}); useEffect(() => { async function analyzeText() { console.log("Starting text analysis..."); try { const urls = ["https://gutenberg.org/cache/epub/4300/pg4300.txt", "https://www.gutenberg.org/files/4300/4300-0.txt"]; let response = null; let successUrl = null; let errorDetails = []; for (const url of urls) { try { console.log("Trying URL:", url); response = await fetch(url); if (response.ok) { successUrl = url; break; } else { errorDetails.push(`${url}: ${response.status}`); } } catch (err) { errorDetails.push(`${url}: ${err.message}`); } } if (!response?.ok) { throw new Error(`Failed to fetch. Details:
+${errorDetails.join("
+")}`); } const text = await response.text(); setDebugInfo({ url: successUrl, textLength: text.length, sample: text.substring(0, 100) }); setLoading(false); } catch (err) { console.error("Error:", err); setError(err.message); setLoading(false); } } analyzeText(); }, []); return ( <Container maxWidth="lg" sx={{ py: 4 }}><Typography variant="h3" component="h1" gutterBottom>Ulysses Literary Analysis</Typography>{loading ? (<Box display="flex" justifyContent="center" alignItems="center" minHeight="400px"><CircularProgress size={60} /><Typography variant="h6" sx={{ ml: 2 }}>Fetching text... Check console (F12)</Typography></Box>) : error ? (<Box sx={{ mt: 4 }}><Typography color="error" variant="h6">Error occurred:</Typography><Typography component="pre" sx={{ whiteSpace: "pre-wrap", bgcolor: "#ffebee", p: 2 }}>{error}</Typography></Box>) : (<Box sx={{ mt: 4 }}><Typography variant="h6">Debug Info:</Typography><Typography component="pre" sx={{ whiteSpace: "pre-wrap", bgcolor: "#f5f5f5", p: 2 }}>{JSON.stringify(debugInfo, null, 2)}</Typography></Box>)}</Container> ); } export default App;
