@@ -1,1 +1,23 @@
-import { useState, useEffect } from "react"; import { Container, Typography, CircularProgress, Paper, Box } from "@mui/material"; import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js"; import { Bar } from "react-chartjs-2"; ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend); function App() { const [loading, setLoading] = useState(true); return ( <Container maxWidth="lg" sx={{ py: 4 }}> <Typography variant="h3" component="h1" gutterBottom>Ulysses Literary Analysis</Typography> {loading ? <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px"><CircularProgress /></Box> : <Typography>Analysis will appear here</Typography>} </Container> ); } export default App;
+import { useState } from 'react';
+import { Container, Typography, CircularProgress, Box } from '@mui/material';
+
+function App() {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h3" component="h1" gutterBottom>
+        Ulysses Literary Analysis
+      </Typography>
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Typography>Analysis will appear here</Typography>
+      )}
+    </Container>
+  );
+}
+
+export default App;
