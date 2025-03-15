@@ -89,7 +89,7 @@ function App() {
             part.toLowerCase() === term.toLowerCase()
           );
           return isTerm ? (
-            <Box component="span" key={i} sx={{ fontWeight: 700 }}>
+            <Box component="span" key={i} sx={{ fontWeight: 800, backgroundColor: "#fff3e0", padding: "0 2px", borderRadius: "2px" }}>
               {part}
             </Box>
           ) : (
