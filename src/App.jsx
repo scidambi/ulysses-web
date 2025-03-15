@@ -1,46 +1,50 @@
 import { useState, useEffect } from "react";
 import { Container, Typography, CircularProgress, Box, Paper, Grid, Card, CardContent } from "@mui/material";
-import axios from "axios";
 
 function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [analysis, setAnalysis] = useState(null);
 
-  const findNonLiteralExpressions = (text) => {
-    const potentialMetaphors = [];
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim());
-    
-    sentences.forEach(sentence => {
-      const hasComparison = /\b(like|as)\b/i.test(sentence);
-      const hasAbstractConcrete = /\b(life|death|time|love|fear|hope)\b.*\b(flows|burns|grows|flies|dances|sings)\b/i.test(sentence);
-      const hasPersonification = /\b(sun|moon|wind|sea|city|night)\b.*\b(laughs|weeps|whispers|speaks|watches|sleeps)\b/i.test(sentence);
-      const hasUnusualPairing = /\b(heart|soul|mind)\b.*\b(ocean|fire|storm|garden|desert)\b/i.test(sentence);
-      
-      if (hasComparison || hasAbstractConcrete || hasPersonification || hasUnusualPairing) {
-        potentialMetaphors.push({
-          sentence: sentence.trim(),
-          type: hasComparison ? "comparison" :
-                hasAbstractConcrete ? "abstract-concrete" :
-                hasPersonification ? "personification" :
-                "unusual-pairing"
-        });
+  const analyzeMetaphors = (text) => {
+    const categories = {
+      religious: {
+        terms: /\b(mass|priest|church|altar|chalice|host|communion|holy|sacred|divine|blessed|soul|spirit|prayer|god|jesus|christ|cross|crucified|resurrection|salvation|sin|penance|confession|eucharist|trinity|virgin mary|saints?)\b/gi,
+        context: /\b(worship|ritual|ceremony|sacrifice|offering|blessing|consecration|sacrament)\b/gi
+      },
+      dublin: {
+        terms: /\b(dublin|city|street|bridge|tower|river|liffey|martello|sandymount|howth|phoenix)\b/gi,
+        context: /\b(walks?|stands?|rises?|flows?|watches?|breathes?)\b/gi
+      },
+      body: {
+        terms: /\b(heart|soul|mind|flesh|blood|bones?|skin|eyes?|hands?)\b/gi,
+        context: /\b(of|in|through) (the|a|an) (world|city|time|life|death|spirit)\b/gi
+      },
+      time: {
+        terms: /\b(time|moment|hour|day|night|eternity|past|future|memory)\b/gi,
+        context: /\b(flows?|moves?|stands?|returns?|remembers?|forgets?)\b/gi
       }
-    });
+    };
 
-    const categorizedMetaphors = potentialMetaphors.reduce((acc, metaphor) => {
-      const concepts = metaphor.sentence.match(/\b(life|death|time|love|fear|hope|sun|moon|wind|sea|city|night|heart|soul|mind|ocean|fire|storm|garden|desert)\b/gi) || [];
-      concepts.forEach(concept => {
-        const category = concept.toLowerCase();
-        if (!acc[category]) acc[category] = [];
-        if (!acc[category].includes(metaphor.sentence)) {
-          acc[category].push(metaphor.sentence);
+    const metaphors = {};
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+
+    sentences.forEach(sentence => {
+      Object.entries(categories).forEach(([category, patterns]) => {
+        const hasTerms = patterns.terms.test(sentence);
+        const hasContext = patterns.context.test(sentence);
+
+        if (hasTerms && hasContext) {
+          if (!metaphors[category]) metaphors[category] = [];
+          metaphors[category].push({
+            text: sentence.trim(),
+            terms: sentence.match(patterns.terms) || []
+          });
         }
       });
-      return acc;
-    }, {});
+    });
 
-    return categorizedMetaphors;
+    return metaphors;
   };
 
   useEffect(() => {
@@ -55,11 +59,13 @@ function App() {
           .trim();
 
         const openingLine = mainContent.match(/Stately,[^.]*\./) || "";
-        const metaphors = findNonLiteralExpressions(mainContent);
+        const metaphors = analyzeMetaphors(mainContent);
         
         setAnalysis({
           textPreview: openingLine,
-          metaphors: metaphors
+          metaphors: metaphors,
+          totalWords: mainContent.split(/\s+/).length,
+          uniqueWords: new Set(mainContent.toLowerCase().split(/\s+/)).size
         });
         
         setLoading(false);
@@ -103,18 +109,39 @@ function App() {
               </Typography>
             </Paper>
           </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Paper elevation={2} sx={{ p: 3, bgcolor: "#f8f9fa" }}>
+              <Typography variant="h6" gutterBottom>
+                Statistics
+              </Typography>
+              <Typography variant="body1">
+                Total Words: {analysis.totalWords.toLocaleString()}
+              </Typography>
+              <Typography variant="body1">
+                Unique Words: {analysis.uniqueWords.toLocaleString()}
+              </Typography>
+            </Paper>
+          </Grid>
           
-          {Object.entries(analysis.metaphors).map(([category, sentences]) => (
+          {Object.entries(analysis.metaphors).map(([category, examples]) => (
             <Grid item xs={12} md={6} key={category}>
               <Card elevation={3}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom sx={{ textTransform: "capitalize" }}>
-                    {category} Metaphors
+                    {category.replace(/_/g, " ")} Metaphors
                   </Typography>
-                  {sentences.slice(0, 2).map((sentence, index) => (
-                    <Typography key={index} variant="body1" paragraph>
-                      {index + 1}. {sentence}
-                    </Typography>
+                  {examples.slice(0, 3).map((example, index) => (
+                    <Box key={index} sx={{ mb: 2 }}>
+                      <Typography variant="body1">
+                        {index + 1}. {example.text}
+                      </Typography>
+                      {example.terms && example.terms.length > 0 && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          Key terms: {example.terms.join(", ")}
+                        </Typography>
+                      )}
+                    </Box>
                   ))}
                 </CardContent>
               </Card>
