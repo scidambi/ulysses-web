@@ -9,16 +9,27 @@ function App() {
   useEffect(() => {
     async function fetchText() {
       try {
-        console.log("Starting fetch...");
-        const response = await fetch("https://www.gutenberg.org/files/4300/4300-0.txt");
+        console.log("Starting local fetch...");
+        const response = await fetch("/texts/ulysses.txt");
         console.log("Response status:", response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const text = await response.text();
         console.log("Text received, length:", text.length);
-        setDebugInfo({ status: response.status, textLength: text.length, preview: text.substring(0, 100) });
+        console.log("First 100 chars:", text.substring(0, 100));
+        
+        setDebugInfo({
+          status: response.status,
+          textLength: text.length,
+          preview: text.substring(0, 100)
+        });
         setLoading(false);
       } catch (err) {
         console.error("Fetch error:", err);
-        setError(err.message);
+        setError(err.toString());
         setLoading(false);
       }
     }
@@ -31,7 +42,7 @@ function App() {
       {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ ml: 2 }}>Fetching text... Check console (F12)</Typography>
+          <Typography variant="h6" sx={{ ml: 2 }}>Loading text... Check console (F12)</Typography>
         </Box>
       ) : error ? (
         <Box sx={{ mt: 4, p: 2, bgcolor: "#ffebee", borderRadius: 1 }}>
