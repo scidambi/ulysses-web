@@ -9,16 +9,9 @@ function App() {
   useEffect(() => {
     async function fetchText() {
       try {
-        console.log("Starting fetch...");
-        const corsProxy = "https://cors-anywhere.herokuapp.com/";
-        const gutenbergUrl = "https://www.gutenberg.org/files/4300/4300-0.txt";
-        const response = await fetch(corsProxy + gutenbergUrl, {
-          headers: {
-            "Origin": window.location.origin
-          }
-        });
-        console.log("Response:", response);
-        console.log("Response headers:", [...response.headers.entries()]);
+        console.log("Starting local fetch...");
+        const response = await fetch("/texts/ulysses.txt");
+        console.log("Response status:", response.status);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -30,7 +23,6 @@ function App() {
         
         setDebugInfo({
           status: response.status,
-          headers: Object.fromEntries([...response.headers.entries()]),
           textLength: text.length,
           preview: text.substring(0, 100)
         });
@@ -50,7 +42,7 @@ function App() {
       {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ ml: 2 }}>Fetching text... Check console (F12)</Typography>
+          <Typography variant="h6" sx={{ ml: 2 }}>Loading text... Check console (F12)</Typography>
         </Box>
       ) : error ? (
         <Box sx={{ mt: 4, p: 2, bgcolor: "#ffebee", borderRadius: 1 }}>
