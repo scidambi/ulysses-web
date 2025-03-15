@@ -78,6 +78,28 @@ function App() {
     analyzeText();
   }, []);
 
+  const BoldTerms = ({ text, terms }) => {
+    if (!terms || terms.length === 0) return <span>{text}</span>;
+    
+    const parts = text.split(new RegExp(`(${terms.join("|")})`, "gi"));
+    return (
+      <>
+        {parts.map((part, i) => {
+          const isTerm = terms.some(term => 
+            part.toLowerCase() === term.toLowerCase()
+          );
+          return isTerm ? (
+            <Box component="span" key={i} sx={{ fontWeight: 700 }}>
+              {part}
+            </Box>
+          ) : (
+            <span key={i}>{part}</span>
+          );
+        })}
+      </>
+    );
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h3" component="h1" gutterBottom>
@@ -134,13 +156,8 @@ function App() {
                   {examples.slice(0, 3).map((example, index) => (
                     <Box key={index} sx={{ mb: 2 }}>
                       <Typography variant="body1">
-                        {index + 1}. {example.text}
+                        {index + 1}. <BoldTerms text={example.text} terms={example.terms} />
                       </Typography>
-                      {example.terms && example.terms.length > 0 && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          Key terms: {example.terms.join(", ")}
-                        </Typography>
-                      )}
                     </Box>
                   ))}
                 </CardContent>
