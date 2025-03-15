@@ -6,6 +6,15 @@ function App() {
   const [error, setError] = useState(null);
   const [analysis, setAnalysis] = useState(null);
 
+  // Define metaphor patterns
+  const metaphorPatterns = {
+    similes: /\b(like|as)\s+(?:a|an|the)\s+([\w\s]+?)(?=[,.])/gi,
+    personification: /\b(time|death|life|love|nature|city|sea|wind|sun|moon)\s+(?:is|was|were|had|has|will|would|could|can)\s+(?:\w+(?:ing|ed|s)\b)/gi,
+    water: /\b(flood|stream|river|ocean|sea|wave)\s+of\s+([\w\s]+?)(?=[,.])/gi,
+    light: /\b(shine|glow|flash|spark|beam|ray)\s+of\s+([\w\s]+?)(?=[,.])/gi,
+    journey: /\b(path|road|journey|voyage|walk)\s+(?:of|to|through)\s+([\w\s]+?)(?=[,.])/gi
+  };
+
   useEffect(() => {
     async function analyzeText() {
       try {
@@ -13,37 +22,26 @@ function App() {
         const response = await fetch("/texts/ulysses.txt");
         const text = await response.text();
         
-        // Clean up the text
-        const cleanText = text
-          .replace(/\r\n/g, " ")  // Replace Windows line endings
-          .replace(/\n/g, " ")    // Replace Unix line endings
-          .replace(/\s+/g, " ")   // Normalize spaces
-          .toLowerCase();
+        // Extract the main content
+        const mainContent = text.split("*** START OF THE PROJECT GUTENBERG EBOOK")[1]
+          .split("*** END OF THE PROJECT GUTENBERG EBOOK")[0]
+          .trim();
+
+        // Find the opening line
+        const openingLine = mainContent.match(/Stately,[^.]*\./)?.[0] || "";
         
-        // Get word frequencies
-        const words = cleanText.split(" ");
-        const wordFreq = {};
-        words.forEach(word => {
-          // Clean the word and check if its valid
-          const cleanWord = word.replace(/[^a-z]/g, "");
-          if (cleanWord.length > 3) {  // Only count words longer than 3 letters
-            wordFreq[cleanWord] = (wordFreq[cleanWord] || 0) + 1;
-          }
+        // Find metaphors
+        const metaphors = {};
+        Object.entries(metaphorPatterns).forEach(([type, pattern]) => {
+          const matches = [...mainContent.matchAll(pattern)];
+          metaphors[type] = matches.map(match => match[0].trim()).slice(0, 5); // Get top 5 of each type
         });
         
-        // Get top 20 words
-        const topWords = Object.entries(wordFreq)
-          .sort(([,a], [,b]) => b - a)
-          .slice(0, 20);
-        
         setAnalysis({
-          totalWords: words.length,
-          uniqueWords: Object.keys(wordFreq).length,
-          topWords: topWords,
-          textPreview: text.split("*** START OF THE PROJECT GUTENBERG EBOOK")[1]
-            .split("*** END OF THE PROJECT GUTENBERG EBOOK")[0]
-            .trim()
-            .substring(0, 200) + "..."
+          textPreview: openingLine,
+          metaphors: metaphors,
+          totalWords: mainContent.split(/\s+/).length,
+          uniqueWords: new Set(mainContent.toLowerCase().split(/\s+/)).size
         });
         
         setLoading(false);
@@ -80,7 +78,7 @@ function App() {
           <Grid item xs={12}>
             <Paper elevation={2} sx={{ p: 3, bgcolor: "#f8f9fa" }}>
               <Typography variant="h6" gutterBottom>
-                Text Preview
+                Opening Line
               </Typography>
               <Typography variant="body1" sx={{ fontStyle: "italic" }}>
                 {analysis.textPreview}
@@ -105,17 +103,26 @@ function App() {
           <Grid item xs={12} md={8}>
             <Paper elevation={2} sx={{ p: 3, bgcolor: "#f8f9fa" }}>
               <Typography variant="h6" gutterBottom>
-                Most Common Words
+                Metaphors & Similes
               </Typography>
-              <Grid container spacing={1}>
-                {analysis.topWords.map(([word, count], index) => (
-                  <Grid item xs={6} sm={4} key={word}>
-                    <Typography variant="body1">
-                      {index + 1}. {word} ({count})
+              {Object.entries(analysis.metaphors).map(([type, examples]) => (
+                <Box key={type} sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: "bold", mt: 1 }}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}:
+                  </Typography>
+                  {examples.length > 0 ? (
+                    examples.map((example, index) => (
+                      <Typography key={index} variant="body1" sx={{ ml: 2 }}>
+                        • {example}
+                      </Typography>
+                    ))
+                  ) : (
+                    <Typography variant="body2" sx={{ ml: 2, fontStyle: "italic" }}>
+                      No examples found
                     </Typography>
-                  </Grid>
-                ))}
-              </Grid>
+                  )}
+                </Box>
+              ))}
             </Paper>
           </Grid>
         </Grid>
