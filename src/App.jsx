@@ -10,15 +10,34 @@ function App() {
     async function fetchText() {
       try {
         console.log("Starting fetch...");
-        const response = await fetch("https://www.gutenberg.org/files/4300/4300-0.txt");
-        console.log("Response status:", response.status);
+        const corsProxy = "https://cors-anywhere.herokuapp.com/";
+        const gutenbergUrl = "https://www.gutenberg.org/files/4300/4300-0.txt";
+        const response = await fetch(corsProxy + gutenbergUrl, {
+          headers: {
+            "Origin": window.location.origin
+          }
+        });
+        console.log("Response:", response);
+        console.log("Response headers:", [...response.headers.entries()]);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const text = await response.text();
         console.log("Text received, length:", text.length);
-        setDebugInfo({ status: response.status, textLength: text.length, preview: text.substring(0, 100) });
+        console.log("First 100 chars:", text.substring(0, 100));
+        
+        setDebugInfo({
+          status: response.status,
+          headers: Object.fromEntries([...response.headers.entries()]),
+          textLength: text.length,
+          preview: text.substring(0, 100)
+        });
         setLoading(false);
       } catch (err) {
         console.error("Fetch error:", err);
-        setError(err.message);
+        setError(err.toString());
         setLoading(false);
       }
     }
